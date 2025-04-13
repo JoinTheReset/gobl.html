@@ -1,5 +1,5 @@
 ---
-name: Build AI Deployment API
+name: Build GOBL HTML
 
 on:
   release:
