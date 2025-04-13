@@ -1,0 +1,37 @@
+
+---
+version: 2
+project_name: gobl.html
+
+release:
+  github:
+    owner: the-it-dept
+    name: gobl.html
+
+
+builds:
+  - id: gobl.html
+    main: ./cmd/gobl.html
+    binary: gobl.html
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    ldflags:
+      - -s -w
+
+dockers:
+  - id: gobl.html
+    dockerfile: Dockerfile
+    image_templates:
+      - "ghcr.io/the-it-dept/gobl.html:latest"
+      - "ghcr.io/the-it-dept/gobl.html:{{ .Tag }}"
+      - "ghcr.io/the-it-dept/gobl.html:v{{ .Major }}"
+
+# create a source tarball
+source:
+  enabled: false

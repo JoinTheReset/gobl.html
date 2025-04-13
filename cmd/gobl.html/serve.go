@@ -5,20 +5,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
-	"path"
-	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com/invopop/ctxi18n/i18n"
 	"github.com/invopop/gobl"
 	goblhtml "github.com/invopop/gobl.html"
 	"github.com/invopop/gobl.html/assets"
 	"github.com/invopop/gobl.html/layout"
 	"github.com/invopop/gobl.html/pkg/pdf"
-	"github.com/invopop/gobl/org"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
@@ -70,7 +66,8 @@ func (s *serveOpts) runE(cmd *cobra.Command, _ []string) error {
 
 	e := prepareEcho()
 	e.StaticFS("/styles", echo.MustSubFS(assets.Content, "styles"))
-	e.GET("/:filename", s.generate)
+	// Changed from GET /:filename to POST /
+	e.POST("/", s.handlePost)
 
 	var startErr error
 	go func() {
@@ -89,6 +86,42 @@ func (s *serveOpts) runE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	return startErr
+}
+
+// handlePost handles POST requests with a GOBL JSON body
+func (s *serveOpts) handlePost(c echo.Context) error {
+	// Read the request body
+	bodyBytes, err := io.ReadAll(c.Request().Body)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("reading request body: %v", err))
+	}
+	defer c.Request().Body.Close()
+
+	// Unmarshal the JSON into a GOBL envelope (includes validation)
+	env := new(gobl.Envelope)
+	if err := json.Unmarshal(bodyBytes, env); err != nil {
+		// Consider providing more specific validation error feedback if possible
+		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("unmarshalling GOBL envelope: %v", err))
+	}
+
+	// Prepare options for rendering
+	// Ensure stylesheets are embedded for PDF generation
+	opts := []goblhtml.Option{
+		goblhtml.WithEmbeddedStylesheets(),
+		goblhtml.WithLayout(layout.A4), // Default to A4 layout
+		// Add default locale or other options if needed, potentially from headers?
+		// goblhtml.WithLocale(i18n.CodeEN),
+	}
+
+	// Render HTML
+	// Note: We pass nil for 'req *options' as it's no longer used
+	htmlData, err := s.render(c, env, opts)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("rendering HTML: %v", err))
+	}
+
+	// Render PDF, attaching the original GOBL JSON
+	return s.renderPDF(c, bodyBytes, htmlData)
 }
 
 func prepareEcho() *echo.Echo {
@@ -112,32 +145,15 @@ func prepareEcho() *echo.Echo {
 	return e
 }
 
-func (s *serveOpts) render(c echo.Context, req *options, env *gobl.Envelope, opts []goblhtml.Option) ([]byte, error) {
+// render generates the HTML content for a given envelope and options.
+// Removed the 'req *options' parameter as it's no longer needed for the POST endpoint.
+// Removed logic related to query parameters as they are not used in the POST flow.
+// Corrected function signature: removed reference to undefined 'options' struct.
+func (s *serveOpts) render(c echo.Context, env *gobl.Envelope, opts []goblhtml.Option) ([]byte, error) {
 	ctx := c.Request().Context()
-	var err error
 
-	// Prepare the request options
-	if req.DateFormat != "" {
-		opts = append(opts, goblhtml.WithCalFormatter(req.DateFormat, "", time.UTC))
-	}
-	opts = append(opts, goblhtml.WithLocale(req.Locale))
-
-	// Add some of the extras to the output
-	if req.LogoURL != "" {
-		logo := &org.Image{
-			URL:    req.LogoURL,
-			Height: req.LogoHeight,
-		}
-		opts = append(opts, goblhtml.WithLogo(logo))
-	}
-	if req.Notes != "" {
-		opts = append(opts, goblhtml.WithNotes(req.Notes))
-	}
-	if req.Layout.IsValid() {
-		opts = append(opts, goblhtml.WithLayout(req.Layout))
-	} else {
-		opts = append(opts, goblhtml.WithLayout(layout.A4))
-	}
+	// Apply default options or options derived from the envelope/context if needed
+	// For now, we rely on options passed in from handlePost
 
 	out, err := goblhtml.Render(ctx, env, opts...)
 	if err != nil {
@@ -147,53 +163,13 @@ func (s *serveOpts) render(c echo.Context, req *options, env *gobl.Envelope, opt
 	return out, nil
 }
 
-type options struct {
-	Filename   string      `param:"filename"`
-	Locale     i18n.Code   `query:"locale"`
-	DateFormat string      `query:"date_format"`
-	LogoURL    string      `query:"logo_url"`
-	LogoHeight int32       `query:"logo_height"`
-	Notes      string      `query:"notes"`
-	Layout     layout.Code `query:"layout"`
-}
+// Removed the 'options' struct as it was tied to the GET /:filename endpoint
 
-func (s *serveOpts) generate(c echo.Context) error {
-	req := new(options)
-	if err := c.Bind(req); err != nil {
-		return fmt.Errorf("binding options: %w", err)
-	}
-	fn := filepath.Base(path.Clean(req.Filename))
-	ext := filepath.Ext(fn)
-	fn = strings.TrimSuffix(fn, ext) + ".json"
+// Removed the 'generate' function as it's replaced by 'handlePost'
 
-	ed, err := os.ReadFile(filepath.Join("./examples", fn))
-	if err != nil {
-		return fmt.Errorf("loading file: %w", err)
-	}
-
-	env := new(gobl.Envelope)
-	if err := json.Unmarshal(ed, env); err != nil {
-		return fmt.Errorf("unmarshalling file: %w", err)
-	}
-
-	opts := make([]goblhtml.Option, 0)
-	if ext == ".pdf" {
-		opts = append(opts, goblhtml.WithEmbeddedStylesheets())
-	}
-	data, err := s.render(c, req, env, opts)
-	if err != nil {
-		return err
-	}
-
-	switch ext {
-	case ".pdf":
-		return s.renderPDF(c, ed, data)
-	default:
-		return c.HTML(http.StatusOK, string(data))
-	}
-}
-
-func (s *serveOpts) renderPDF(c echo.Context, ed, data []byte) error {
+// renderPDF converts HTML data to PDF, attaching the original GOBL JSON.
+// Changed signature to accept goblJSON and htmlData.
+func (s *serveOpts) renderPDF(c echo.Context, goblJSON, htmlData []byte) error {
 	if s.convertor == nil {
 		return errors.New("no PDF convertor available")
 	}
@@ -201,12 +177,12 @@ func (s *serveOpts) renderPDF(c echo.Context, ed, data []byte) error {
 	// prepare the GOBL attachment
 	opts := []pdf.Option{
 		pdf.WithAttachment(&pdf.Attachment{
-			Data:     ed,
+			Data:     goblJSON, // Use the original JSON data passed in
 			Filename: "gobl.json",
 		}),
 	}
 
-	out, err := s.convertor.HTML(c.Request().Context(), data, opts...)
+	out, err := s.convertor.HTML(c.Request().Context(), htmlData, opts...)
 	if err != nil {
 		return fmt.Errorf("converting to PDF: %w", err)
 	}

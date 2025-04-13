@@ -17,23 +17,23 @@
 		"issue_date": "2024-05-08",
 		"currency": "USD",
 		"supplier": {
-			"name": "Invopop Inc.",
+			"name": "The IT Dept Pty Ltd",
 			"tax_id": {
-				"country": "US"
+				"country": "AU"
 			},
 			"addresses": [
 				{
-					"num": "1111B",
-					"street": "S Governors Ave #6229",
-					"locality": "Dover",
-					"region": "DE",
-					"code": "19904",
-					"country": "US"
+					"num": "40",
+					"street": "Woolana Ave",
+					"locality": "Budgewoi",
+					"region": "NSW",
+					"code": "2262",
+					"country": "AU"
 				}
 			],
 			"emails": [
 				{
-					"addr": "billing@invopop.com"
+					"addr": "billing@theitdept.au"
 				}
 			],
 			"logos": [
