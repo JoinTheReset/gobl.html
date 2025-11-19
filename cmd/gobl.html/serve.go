@@ -95,7 +95,9 @@ func (s *serveOpts) handlePost(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, fmt.Sprintf("reading request body: %v", err))
 	}
-	defer c.Request().Body.Close()
+	defer func() {
+		_ = c.Request().Body.Close()
+	}()
 
 	// Unmarshal the JSON into a GOBL envelope (includes validation)
 	env := new(gobl.Envelope)

@@ -4,36 +4,36 @@
 		"uuid": "3a8e2ae1-eab8-11ed-b735-3e7e00ce5635",
 		"dig": {
 			"alg": "sha256",
-			"val": "84bb8ee367c8f9eff224425e370adebc126d8a38a4767e0596a0762c7ba8a39a"
+			"val": "5d7c31bf9d68b3d6adbdd70a61c163a207f25ac7c2043dd9065c9f534e4acd07"
 		}
 	},
 	"doc": {
 		"$schema": "https://gobl.org/draft-0/bill/invoice",
-		"$regime": "US",
+		"$regime": "AU",
 		"uuid": "018f57cc-cc50-7289-a654-a2507af6c889",
 		"type": "standard",
 		"series": "FAKE",
 		"code": "0001",
 		"issue_date": "2024-05-08",
-		"currency": "USD",
+		"currency": "AUD",
 		"supplier": {
-			"name": "The IT Dept Pty Ltd",
+			"name": "ResetData Pty Ltd",
 			"tax_id": {
 				"country": "AU"
 			},
 			"addresses": [
 				{
-					"num": "40",
-					"street": "Woolana Ave",
-					"locality": "Budgewoi",
+					"num": "Level 30",
+					"street": "Chifley Tower",
+					"locality": "Chifley Square",
 					"region": "NSW",
-					"code": "2262",
+					"code": "2000",
 					"country": "AU"
 				}
 			],
 			"emails": [
 				{
-					"addr": "billing@theitdept.au"
+					"addr": "billing@resetdata.com.au"
 				}
 			],
 			"logos": [
