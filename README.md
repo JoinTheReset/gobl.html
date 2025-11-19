@@ -1,6 +1,6 @@
 # gobl.html
 
-Generate HTML files from GOBL documents.
+Generate HTML files from GOBL documents. 
 
 Released under the Apache 2.0 [LICENSE](https://github.com/invopop/gobl/blob/main/LICENSE), Copyright 2024 [Invopop Ltd.](https://invopop.com).
 
