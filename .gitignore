@@ -31,3 +31,8 @@ localazy.json
 /gobl.html
 
 /tmp
+
+
+# IDE
+.vscode/
+.idea/
