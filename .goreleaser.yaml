@@ -5,7 +5,7 @@ project_name: gobl.html
 
 release:
   github:
-    owner: JoinTheReset
+    owner: jointhereset
     name: gobl.html
 
 
@@ -28,9 +28,9 @@ dockers:
   - id: gobl.html
     dockerfile: Dockerfile
     image_templates:
-      - "ghcr.io/JoinTheReset/gobl.html:latest"
-      - "ghcr.io/JoinTheReset/gobl.html:{{ .Tag }}"
-      - "ghcr.io/JoinTheReset/gobl.html:v{{ .Major }}"
+      - "ghcr.io/jointhereset/gobl.html:latest"
+      - "ghcr.io/jointhereset/gobl.html:{{ .Tag }}"
+      - "ghcr.io/jointhereset/gobl.html:v{{ .Major }}"
 
 # create a source tarball
 source:
