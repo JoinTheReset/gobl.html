@@ -1,0 +1,28 @@
+# Build stage
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+
+# Install git for go mod download
+RUN apk add --no-cache git
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o gobl.html ./cmd/gobl.html
+
+# Final stage
+FROM gcr.io/distroless/static-debian12
+
+COPY --from=builder /app/gobl.html /
+
+ENTRYPOINT ["/gobl.html"]
+
+EXPOSE 3000
