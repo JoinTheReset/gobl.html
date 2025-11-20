@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/invopop/ctxi18n/i18n"
 	"github.com/invopop/gobl"
-	"github.com/invopop/gobl.html/components/images"
 	"github.com/invopop/gobl.html/components/regimes/pt"
 	"github.com/invopop/gobl.html/internal"
 	"strings"
@@ -14,14 +13,12 @@ templ footerPrint(env *gobl.Envelope) {
 	<footer class="print">
 		@footerNotes(env)
 		@footerPage()
-		@footerGOBLLogo()
 	</footer>
 }
 
 templ footerScreen(env *gobl.Envelope) {
 	<footer class="screen">
 		@footerNotes(env)
-		@footerGOBLLogo()
 	</footer>
 }
 
@@ -37,14 +34,6 @@ templ footerNotes(env *gobl.Envelope) {
 			@templ.Raw(txt)
 		</span>
 	}
-}
-
-templ footerGOBLLogo() {
-	<div class="gobl-logo">
-		<a href="https://gobl.org">
-			@images.GOBL()
-		</a>
-	</div>
 }
 
 func pageNumber(ctx context.Context) string {
