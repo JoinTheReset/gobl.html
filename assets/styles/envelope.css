@@ -106,6 +106,7 @@ footer .pages-number {
     content: counter(pages);
 }
 footer .gobl-logo {
+    display: none;
     float: left;
 }
 footer.print .notes:after {
