@@ -122,8 +122,8 @@ func (s *serveOpts) handlePost(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, fmt.Sprintf("rendering HTML: %v", err))
 	}
 
-	// Render PDF, attaching the original GOBL JSON
-	return s.renderPDF(c, bodyBytes, htmlData)
+	// Render PDF, attaching the original GOBL JSON and metadata from envelope
+	return s.renderPDF(c, env, bodyBytes, htmlData)
 }
 
 func prepareEcho() *echo.Echo {
@@ -170,18 +170,23 @@ func (s *serveOpts) render(c echo.Context, env *gobl.Envelope, opts []goblhtml.O
 // Removed the 'generate' function as it's replaced by 'handlePost'
 
 // renderPDF converts HTML data to PDF, attaching the original GOBL JSON.
-// Changed signature to accept goblJSON and htmlData.
-func (s *serveOpts) renderPDF(c echo.Context, goblJSON, htmlData []byte) error {
+// Changed signature to accept envelope, goblJSON and htmlData.
+func (s *serveOpts) renderPDF(c echo.Context, env *gobl.Envelope, goblJSON, htmlData []byte) error {
 	if s.convertor == nil {
 		return errors.New("no PDF convertor available")
 	}
 
-	// prepare the GOBL attachment
+	// prepare the PDF options
 	opts := []pdf.Option{
 		pdf.WithAttachment(&pdf.Attachment{
 			Data:     goblJSON, // Use the original JSON data passed in
 			Filename: "gobl.json",
 		}),
+	}
+
+	// Extract and add metadata from the envelope
+	if md := pdf.MetadataFromEnvelope(env); md != nil {
+		opts = append(opts, pdf.WithMetadata(md))
 	}
 
 	out, err := s.convertor.HTML(c.Request().Context(), htmlData, opts...)
