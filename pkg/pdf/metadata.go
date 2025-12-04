@@ -12,6 +12,7 @@ import (
 
 const (
 	defaultCreator = "GOBL HTML"
+	subjectInvoice = "Invoice"
 )
 
 // MetadataFromEnvelope extracts PDF metadata from a GOBL envelope.
@@ -65,25 +66,25 @@ func MetadataFromEnvelope(env *gobl.Envelope) *Metadata {
 func invoiceTitle(inv *bill.Invoice) string {
 	code := inv.Series.Join(inv.Code)
 	if code == "" {
-		return "Invoice"
+		return subjectInvoice
 	}
-	return fmt.Sprintf("Invoice %s", code)
+	return fmt.Sprintf("%s %s", subjectInvoice, code)
 }
 
 func invoiceSubject(inv *bill.Invoice) string {
 	switch inv.Type {
 	case bill.InvoiceTypeStandard:
-		return "Invoice"
+		return subjectInvoice
 	case bill.InvoiceTypeCreditNote:
 		return "Credit Note"
 	case bill.InvoiceTypeDebitNote:
 		return "Debit Note"
 	case bill.InvoiceTypeCorrective:
-		return "Corrective Invoice"
+		return "Corrective " + subjectInvoice
 	case bill.InvoiceTypeProforma:
-		return "Proforma Invoice"
+		return "Proforma " + subjectInvoice
 	default:
-		return "Invoice"
+		return subjectInvoice
 	}
 }
 
