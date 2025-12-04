@@ -75,7 +75,7 @@ en:
           ref: "Reference"
           bank_data: "Bank transfer instructions"
           card: "Card Payment"
-          card_detail: "Payment made to card ending %{last4}"
+          card_detail: "Payment made to card ending %{last4} belonging to %{holder}"
           observations: "Payment Notes"
           bank_name: "Bank: %{name}"
           iban: "IBAN: %{iban}"
@@ -199,7 +199,6 @@ en:
       identity: "%{label}: %{code}"
       identity_code: "Identity code"
       identity_labels:
-        au: "ABN"
         it-fiscal-code: "Codice Fiscale"
         de-tax-number: "St. -Nr."
       ext: "%{label}: %{value}"
@@ -248,3 +247,6 @@ en:
         LD: "Lead Co-insurer Allocation"
         RA: "Accepted Reinsurance"
         canceled: "Canceled"
+
+
+
