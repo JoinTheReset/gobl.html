@@ -1,0 +1,66 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$CI_COMMIT_TAG =~ /^v/'
+    - when: never
+
+stages:
+  - test
+  - release
+
+default:
+  interruptible: true
+
+.go-cache:
+  variables:
+    GOCACHE: "$CI_PROJECT_DIR/.cache/go-build"
+    GOMODCACHE: "$CI_PROJECT_DIR/.cache/go-mod"
+    GOPROXY: "https://proxy.golang.org,direct"
+  cache:
+    key:
+      files:
+        - go.sum
+    paths:
+      - .cache/go-build/
+      - .cache/go-mod/
+
+lint:
+  extends: .go-cache
+  stage: test
+  image: golangci/golangci-lint:v1.62.2
+  script:
+    - golangci-lint run --timeout 5m
+
+test:
+  extends: .go-cache
+  stage: test
+  image: golang:1.23.4-bookworm
+  script:
+    - go mod download
+    - go test -tags unit -race ./...
+
+release:
+  stage: release
+  image:
+    name: goreleaser/goreleaser:v2
+    entrypoint: [""]
+  services:
+    - name: docker:27-dind
+      alias: docker
+  variables:
+    DOCKER_HOST: "tcp://docker:2375"
+    DOCKER_TLS_CERTDIR: ""
+    GIT_DEPTH: "0"
+    GITHUB_TOKEN: "$GITHUB_RELEASE_TOKEN"
+  resource_group: gobl-html-release
+  interruptible: false
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v/'
+      when: manual
+  before_script:
+    - test -n "$GITHUB_RELEASE_USER"
+    - test -n "$GITHUB_RELEASE_TOKEN"
+    - echo "$GITHUB_RELEASE_TOKEN" | docker login ghcr.io --username "$GITHUB_RELEASE_USER" --password-stdin
+  script:
+    - goreleaser release --clean
