@@ -30,7 +30,7 @@ lint:
   stage: test
   image: golangci/golangci-lint:v1.62.2
   script:
-    - golangci-lint run
+    - golangci-lint run --timeout 5m
 
 test:
   extends: .go-cache
